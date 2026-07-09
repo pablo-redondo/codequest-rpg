@@ -1,14 +1,17 @@
-export function MissionScreen({
-  currentZone,
-  currentMission,
-  missionIndex,
-  totalMissions,
-  answered,
-  selectedAnswer,
-  onSubmit,
-  onNext,
-}) {
+import { useGameStore, useCurrentZone, useCurrentMission } from '../store/gameStore';
+
+export function MissionScreen() {
+  const currentZone = useCurrentZone();
+  const currentMission = useCurrentMission();
+  const missionIndex = useGameStore((state) => state.mission.missionIndex);
+  const answered = useGameStore((state) => state.mission.answered);
+  const selectedAnswer = useGameStore((state) => state.mission.selectedAnswer);
+  const submitAnswer = useGameStore((state) => state.submitAnswer);
+  const nextMission = useGameStore((state) => state.nextMission);
+
   if (!currentZone || !currentMission) return null;
+
+  const totalMissions = currentZone.missions.length;
 
   return (
     <div className="screen mission-screen">
@@ -52,7 +55,7 @@ export function MissionScreen({
               <button
                 key={i}
                 className={btnClass}
-                onClick={() => onSubmit(i)}
+                onClick={() => submitAnswer(i)}
                 disabled={answered}
               >
                 {choice}
@@ -68,7 +71,7 @@ export function MissionScreen({
             {selectedAnswer === currentMission.correct ? '✅ ¡Correcto! +30 XP +10 Gold' : '❌ Incorrecto'}
           </div>
           <p className="feedback-text">{currentMission.explanation}</p>
-          <button className="btn-primary" onClick={onNext}>
+          <button className="btn-primary" onClick={nextMission}>
             {missionIndex + 1 < totalMissions ? '➡️ Siguiente Misión' : '🏆 Ver Resultados'}
           </button>
         </div>

@@ -1,16 +1,15 @@
-export function ResultsScreen({
-  currentZone,
-  sessionCorrect,
-  sessionXP,
-  gold,
-  inventory,
-  totalMissions,
-  onGoToWorld,
-}) {
-  const accuracy = totalMissions > 0 ? Math.round((sessionCorrect / totalMissions) * 100) : 0;
-  const lootItem = currentZone
-    ? currentZone.icon + ' ' + currentZone.name.replace('Zona de ', '') + ' Scroll'
-    : null;
+import { useGameStore, useCurrentZone } from '../store/gameStore';
+import { getLootItem } from '../utils/loot';
+
+export function ResultsScreen() {
+  const currentZone = useCurrentZone();
+  const session = useGameStore((state) => state.session);
+  const gold = useGameStore((state) => state.player.gold);
+  const goToWorld = useGameStore((state) => state.goToWorld);
+
+  const totalMissions = currentZone ? currentZone.missions.length : 0;
+  const accuracy = totalMissions > 0 ? Math.round((session.sessionCorrect / totalMissions) * 100) : 0;
+  const lootItem = currentZone ? getLootItem(currentZone) : null;
 
   return (
     <div className="screen results-screen">
@@ -21,11 +20,11 @@ export function ResultsScreen({
 
       <div className="results-grid">
         <div className="result-card">
-          <div className="result-value">{sessionCorrect}/{totalMissions}</div>
+          <div className="result-value">{session.sessionCorrect}/{totalMissions}</div>
           <div className="result-label">Correctas</div>
         </div>
         <div className="result-card">
-          <div className="result-value">+{sessionXP}</div>
+          <div className="result-value">+{session.sessionXP}</div>
           <div className="result-label">XP Ganado</div>
         </div>
         <div className="result-card">
@@ -51,7 +50,7 @@ export function ResultsScreen({
         <div className="perfect-badge">⭐ ¡Puntuación Perfecta! ⭐</div>
       )}
 
-      <button className="btn-primary" onClick={onGoToWorld}>
+      <button className="btn-primary" onClick={goToWorld}>
         🗺️ Volver al Mapa
       </button>
     </div>

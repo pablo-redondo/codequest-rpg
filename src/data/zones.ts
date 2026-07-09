@@ -1,4 +1,6 @@
-export const zones = [
+import type { Zone } from '../types/zone';
+
+export const zones: Zone[] = [
   {
     id: 'variables',
     name: 'Zona de Variables',
