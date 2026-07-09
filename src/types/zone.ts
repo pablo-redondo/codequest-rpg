@@ -18,4 +18,4 @@ export interface Zone {
   missions: Mission[];
 }
 
-export type Screen = 'title' | 'world' | 'mission' | 'results';
+export type Screen = 'title' | 'world' | 'challenge' | 'results';

@@ -60,7 +60,7 @@ export const useGameStore = create<GameState>()(
 
       startZone: (zoneId) =>
         set({
-          screen: 'mission',
+          screen: 'challenge',
           mission: { currentZoneId: zoneId, missionIndex: 0, answered: false, selectedAnswer: null },
           session: { sessionCorrect: 0, sessionXP: 0 },
         }),

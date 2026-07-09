@@ -20,4 +20,11 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    files: ['e2e/**/*.{js,mjs}'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      globals: { ...globals.node, fetch: 'readonly' },
+    },
+  },
 ])

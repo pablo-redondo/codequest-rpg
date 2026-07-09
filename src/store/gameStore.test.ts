@@ -21,7 +21,7 @@ describe('startZone', () => {
     useGameStore.getState().startZone('variables');
     const state = useGameStore.getState();
 
-    expect(state.screen).toBe('mission');
+    expect(state.screen).toBe('challenge');
     expect(state.mission).toEqual({
       currentZoneId: 'variables',
       missionIndex: 0,
@@ -96,7 +96,7 @@ describe('nextMission', () => {
     useGameStore.getState().nextMission();
     const state = useGameStore.getState();
 
-    expect(state.screen).toBe('mission');
+    expect(state.screen).toBe('challenge');
     expect(state.mission.missionIndex).toBe(1);
     expect(state.mission.answered).toBe(false);
     expect(state.mission.selectedAnswer).toBe(null);

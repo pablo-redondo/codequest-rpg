@@ -10,7 +10,7 @@ function App() {
 
   if (screen === 'title') return <TitleScreen />;
   if (screen === 'world') return <WorldMap />;
-  if (screen === 'mission') return <MissionScreen />;
+  if (screen === 'challenge') return <MissionScreen />;
   if (screen === 'results') return <ResultsScreen />;
 
   return null;
