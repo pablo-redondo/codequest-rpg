@@ -1,13 +1,4 @@
-export interface Mission {
-  npc: string;
-  story: string;
-  concept: string;
-  code: string;
-  question: string;
-  choices: string[];
-  correct: number;
-  explanation: string;
-}
+import type { CodeChallenge, Concept } from './challenge';
 
 export interface Zone {
   id: string;
@@ -15,7 +6,8 @@ export interface Zone {
   icon: string;
   color: string;
   description: string;
-  missions: Mission[];
+  concept: Concept;
+  challenges: CodeChallenge[];
 }
 
 export type Screen = 'title' | 'world' | 'challenge' | 'results';

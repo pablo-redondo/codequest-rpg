@@ -7,8 +7,8 @@ export function ResultsScreen() {
   const gold = useGameStore((state) => state.player.gold);
   const goToWorld = useGameStore((state) => state.goToWorld);
 
-  const totalMissions = currentZone ? currentZone.missions.length : 0;
-  const accuracy = totalMissions > 0 ? Math.round((session.sessionCorrect / totalMissions) * 100) : 0;
+  const totalChallenges = currentZone ? currentZone.challenges.length : 0;
+  const accuracy = totalChallenges > 0 ? Math.round((session.sessionCorrect / totalChallenges) * 100) : 0;
   const lootItem = currentZone ? getLootItem(currentZone) : null;
 
   return (
@@ -20,8 +20,8 @@ export function ResultsScreen() {
 
       <div className="results-grid">
         <div className="result-card">
-          <div className="result-value">{session.sessionCorrect}/{totalMissions}</div>
-          <div className="result-label">Correctas</div>
+          <div className="result-value">{session.sessionCorrect}/{totalChallenges}</div>
+          <div className="result-label">Enemigos Vencidos</div>
         </div>
         <div className="result-card">
           <div className="result-value">+{session.sessionXP}</div>

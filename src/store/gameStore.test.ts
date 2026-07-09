@@ -1,147 +1,138 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useGameStore } from './gameStore';
 import { zones } from '../data/zones';
+import type { ChallengeResult } from '../types/challenge';
 
-const variablesZone = zones.find((z) => z.id === 'variables')!;
+const logicaZone = zones.find((z) => z.id === 'logica')!; // 1 reto
+const buclesZone = zones.find((z) => z.id === 'bucles')!; // 2 retos
 
 function resetStore() {
   localStorage.clear();
   useGameStore.setState({
     screen: 'title',
     player: { level: 1, xp: 0, gold: 0, inventory: [] },
-    mission: { currentZoneId: null, missionIndex: 0, answered: false, selectedAnswer: null },
-    session: { sessionCorrect: 0, sessionXP: 0 },
+    challenge: { currentZoneId: null, challengeIndex: 0 },
+    session: { sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0 },
   });
 }
 
 beforeEach(resetStore);
 
+function passResult(): ChallengeResult {
+  return { outcome: 'pass', cases: [], durationMs: 1 };
+}
+
+function failResult(): ChallengeResult {
+  return { outcome: 'fail', cases: [], durationMs: 1 };
+}
+
 describe('startZone', () => {
-  it('moves to the mission screen and resets the mission/session state', () => {
-    useGameStore.getState().startZone('variables');
+  it('moves to the challenge screen and resets the challenge/session state', () => {
+    useGameStore.getState().startZone('bucles');
     const state = useGameStore.getState();
 
     expect(state.screen).toBe('challenge');
-    expect(state.mission).toEqual({
-      currentZoneId: 'variables',
-      missionIndex: 0,
-      answered: false,
-      selectedAnswer: null,
-    });
-    expect(state.session).toEqual({ sessionCorrect: 0, sessionXP: 0 });
+    expect(state.challenge).toEqual({ currentZoneId: 'bucles', challengeIndex: 0 });
+    expect(state.session).toEqual({ sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0 });
   });
 });
 
-describe('submitAnswer', () => {
-  it('awards XP and gold on a correct answer', () => {
-    useGameStore.getState().startZone('variables');
-    const correctIndex = variablesZone.missions[0].correct;
+describe('applyChallengeResult', () => {
+  it('awards the reward xp/gold of the current challenge on pass', () => {
+    useGameStore.getState().startZone('logica');
+    const reward = logicaZone.challenges[0];
 
-    useGameStore.getState().submitAnswer(correctIndex);
+    useGameStore.getState().applyChallengeResult(passResult());
     const state = useGameStore.getState();
 
-    expect(state.player.xp).toBe(30);
-    expect(state.player.gold).toBe(10);
-    expect(state.session).toEqual({ sessionCorrect: 1, sessionXP: 30 });
-    expect(state.mission.answered).toBe(true);
-    expect(state.mission.selectedAnswer).toBe(correctIndex);
+    expect(state.player.xp).toBe(reward.rewardXp);
+    expect(state.player.gold).toBe(reward.rewardGold);
+    expect(state.session.sessionCorrect).toBe(1);
+    expect(state.session.sessionXP).toBe(reward.rewardXp);
   });
 
-  it('does not award XP or gold on a wrong answer', () => {
-    useGameStore.getState().startZone('variables');
-    const correctIndex = variablesZone.missions[0].correct;
-    const wrongIndex = (correctIndex + 1) % variablesZone.missions[0].choices.length;
+  it('does not award xp/gold and increments challengeAttempts on fail/error/timeout', () => {
+    useGameStore.getState().startZone('logica');
 
-    useGameStore.getState().submitAnswer(wrongIndex);
+    useGameStore.getState().applyChallengeResult(failResult());
+    useGameStore.getState().applyChallengeResult({ outcome: 'error', cases: [], durationMs: 1 });
+    useGameStore.getState().applyChallengeResult({ outcome: 'timeout', cases: [], durationMs: 1 });
     const state = useGameStore.getState();
 
     expect(state.player.xp).toBe(0);
     expect(state.player.gold).toBe(0);
-    expect(state.session).toEqual({ sessionCorrect: 0, sessionXP: 0 });
-    expect(state.mission.answered).toBe(true);
-    expect(state.mission.selectedAnswer).toBe(wrongIndex);
+    expect(state.session.sessionCorrect).toBe(0);
+    expect(state.session.challengeAttempts).toBe(3);
   });
 
-  it('is a no-op once the current mission has already been answered', () => {
-    useGameStore.getState().startZone('variables');
-    const correctIndex = variablesZone.missions[0].correct;
-
-    useGameStore.getState().submitAnswer(correctIndex);
-    useGameStore.getState().submitAnswer(correctIndex);
-    const state = useGameStore.getState();
-
-    expect(state.player.xp).toBe(30);
-    expect(state.session.sessionCorrect).toBe(1);
-  });
-
-  it('levels up and carries over the XP overflow once the threshold is reached', () => {
+  it('levels up and carries over the xp overflow once the threshold is reached', () => {
     useGameStore.setState({ player: { level: 1, xp: 90, gold: 0, inventory: [] } });
-    useGameStore.getState().startZone('variables');
-    const correctIndex = variablesZone.missions[0].correct;
+    useGameStore.getState().startZone('logica'); // rewardXp 40 -> 90+40=130 >= 100
 
-    useGameStore.getState().submitAnswer(correctIndex);
+    useGameStore.getState().applyChallengeResult(passResult());
     const state = useGameStore.getState();
 
-    // 90 + 30 = 120 >= 1 * 100 -> level up, remainder 20
     expect(state.player.level).toBe(2);
-    expect(state.player.xp).toBe(20);
+    expect(state.player.xp).toBe(30);
   });
 });
 
-describe('nextMission', () => {
-  it('advances to the next mission and resets the answer state', () => {
-    useGameStore.getState().startZone('variables');
-    useGameStore.getState().submitAnswer(variablesZone.missions[0].correct);
+describe('nextChallenge', () => {
+  it('advances challengeIndex within the zone and resets challengeAttempts', () => {
+    useGameStore.getState().startZone('bucles');
+    useGameStore.getState().applyChallengeResult(failResult());
+    useGameStore.getState().applyChallengeResult(passResult());
 
-    useGameStore.getState().nextMission();
+    useGameStore.getState().nextChallenge();
     const state = useGameStore.getState();
 
     expect(state.screen).toBe('challenge');
-    expect(state.mission.missionIndex).toBe(1);
-    expect(state.mission.answered).toBe(false);
-    expect(state.mission.selectedAnswer).toBe(null);
+    expect(state.challenge.challengeIndex).toBe(1);
+    expect(state.session.challengeAttempts).toBe(0);
   });
 
-  it('awards loot and moves to the results screen after the last mission', () => {
-    useGameStore.getState().startZone('variables');
+  it('awards loot and moves to results after the last challenge of the zone', () => {
+    useGameStore.getState().startZone('logica'); // 1 solo reto
 
-    variablesZone.missions.forEach((mission, index) => {
-      useGameStore.getState().submitAnswer(mission.correct);
-      useGameStore.getState().nextMission();
-      if (index < variablesZone.missions.length - 1) {
-        expect(useGameStore.getState().mission.missionIndex).toBe(index + 1);
+    useGameStore.getState().applyChallengeResult(passResult());
+    useGameStore.getState().nextChallenge();
+    const state = useGameStore.getState();
+
+    expect(state.screen).toBe('results');
+    expect(state.player.inventory).toEqual(['🧩 Bosque de la Lógica Scroll']);
+  });
+
+  it('advances through every challenge of a multi-challenge zone before finishing', () => {
+    useGameStore.getState().startZone('bucles');
+
+    buclesZone.challenges.forEach((_, index) => {
+      useGameStore.getState().applyChallengeResult(passResult());
+      useGameStore.getState().nextChallenge();
+      if (index < buclesZone.challenges.length - 1) {
+        expect(useGameStore.getState().challenge.challengeIndex).toBe(index + 1);
       }
     });
 
-    const state = useGameStore.getState();
-    expect(state.screen).toBe('results');
-    expect(state.player.inventory).toEqual(['📦 Variables Scroll']);
-    expect(state.session).toEqual({ sessionCorrect: 3, sessionXP: 90 });
+    expect(useGameStore.getState().screen).toBe('results');
   });
 
   it('does not duplicate loot if the same zone is completed twice', () => {
     for (let run = 0; run < 2; run++) {
-      useGameStore.getState().startZone('variables');
-      variablesZone.missions.forEach((mission) => {
-        useGameStore.getState().submitAnswer(mission.correct);
-        useGameStore.getState().nextMission();
-      });
+      useGameStore.getState().startZone('logica');
+      useGameStore.getState().applyChallengeResult(passResult());
+      useGameStore.getState().nextChallenge();
     }
 
-    expect(useGameStore.getState().player.inventory).toEqual(['📦 Variables Scroll']);
+    expect(useGameStore.getState().player.inventory).toEqual(['🧩 Bosque de la Lógica Scroll']);
   });
 });
 
 describe('goToWorld', () => {
-  it('returns to the world screen and clears the answer state', () => {
-    useGameStore.getState().startZone('variables');
-    useGameStore.getState().submitAnswer(variablesZone.missions[0].correct);
+  it('returns to the world screen', () => {
+    useGameStore.getState().startZone('logica');
 
     useGameStore.getState().goToWorld();
-    const state = useGameStore.getState();
 
-    expect(state.screen).toBe('world');
-    expect(state.mission.answered).toBe(false);
-    expect(state.mission.selectedAnswer).toBe(null);
+    expect(useGameStore.getState().screen).toBe('world');
   });
 });

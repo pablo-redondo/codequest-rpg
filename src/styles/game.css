@@ -559,6 +559,192 @@ body {
   animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* Challenge Screen (Fase 2: combate = reto de código) */
+.challenge-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.enemy-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.enemy-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.enemy-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.enemy-icon {
+  font-size: 2.8rem;
+  flex-shrink: 0;
+}
+
+.enemy-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.enemy-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.enemy-hp-track {
+  height: 12px;
+  background: var(--bg-secondary);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.enemy-hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--coral), var(--coral-dark));
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.enemy-hp-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Code Editor (CodeMirror) */
+.code-editor {
+  background: #0d1117;
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.code-editor .cm-editor {
+  font-size: 0.88rem;
+}
+
+.code-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+/* Test Cases Panel */
+.test-cases-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.test-cases-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.test-case-item {
+  padding: 0.65rem 1.1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.test-case-icon {
+  flex-shrink: 0;
+}
+
+.test-case-hidden {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.test-case-diff code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}
+
+.test-case-pass {
+  color: #a5d6a7;
+}
+
+.test-case-fail {
+  color: #ef9a9a;
+}
+
+/* Action button */
+.action-button {
+  width: 100%;
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Feedback: running / error / timeout */
+.feedback-running {
+  background: rgba(0, 188, 212, 0.1);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+}
+
+.feedback-running .feedback-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--teal);
+}
+
+.feedback-error {
+  background: rgba(244, 67, 54, 0.12);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+}
+
+.feedback-error .feedback-icon {
+  color: var(--red);
+}
+
+.feedback-timeout {
+  background: rgba(255, 152, 0, 0.12);
+  border: 1px solid rgba(255, 152, 0, 0.4);
+}
+
+.feedback-timeout .feedback-icon {
+  color: var(--amber);
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 188, 212, 0.3);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Responsive */
 @media (max-width: 500px) {
   .choices-grid {

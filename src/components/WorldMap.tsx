@@ -66,7 +66,7 @@ export function WorldMap() {
             <div className="zone-icon">{zone.icon}</div>
             <div className="zone-name">{zone.name}</div>
             <div className="zone-desc">{zone.description}</div>
-            <div className="zone-missions">{zone.missions.length} misiones</div>
+            <div className="zone-missions">{zone.challenges.length} enemigos</div>
           </button>
         ))}
       </div>
