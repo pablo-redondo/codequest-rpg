@@ -9,7 +9,21 @@ function challengesFor(...ids: string[]) {
   });
 }
 
+/**
+ * Orden de progresión: variables -> condicionales -> bucles -> arrays ->
+ * funciones -> recursión. Sigue la curva pedagógica clásica y coincide con
+ * la dificultad creciente de los retos (1,1 -> 1 -> 2,2 -> 1,2,2 -> 2,3 -> 3).
+ */
 export const zones: Zone[] = [
+  {
+    id: 'aldea',
+    name: 'Aldea de las Variables',
+    icon: '🏘️',
+    color: '#00bcd4',
+    description: 'Donde todo aventurero aprende a nombrar y recordar el mundo',
+    concept: 'variables',
+    challenges: challengesFor('mercader-embrujado', 'duende-trastocado'),
+  },
   {
     id: 'logica',
     name: 'Bosque de la Lógica',
@@ -27,6 +41,24 @@ export const zones: Zone[] = [
     description: 'Hordas que solo se vencen repitiendo la acción correcta',
     concept: 'loops',
     challenges: challengesFor('enjambre-de-slimes', 'guardianes-heridos'),
+  },
+  {
+    id: 'mercado',
+    name: 'Mercado de las Listas',
+    icon: '🧺',
+    color: '#4caf50',
+    description: 'Cada tesoro es un elemento más en una lista por domar',
+    concept: 'arrays',
+    challenges: challengesFor('trol-tasador', 'golem-contable', 'espejo-distorsionado'),
+  },
+  {
+    id: 'gremio',
+    name: 'Gremio de las Funciones',
+    icon: '⚙️',
+    color: '#3f51b5',
+    description: 'Aquí los hechizos se empaquetan para reutilizarse mil veces',
+    concept: 'functions',
+    challenges: challengesFor('aprendiz-distraido', 'espiritu-combinador'),
   },
   {
     id: 'recursion',

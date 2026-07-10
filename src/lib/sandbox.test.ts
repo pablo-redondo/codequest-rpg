@@ -86,6 +86,20 @@ describe('each shipped challenge is solvable', () => {
       'function contarVivos(heroes) { let v = 0; for (const h of heroes) if (h.vida > 0) v++; return v; }',
     'dragon-fractal':
       'function factorial(n) { return n === 0 ? 1 : n * factorial(n - 1); }',
+    'mercader-embrujado':
+      'function calcularPrecioFinal(precioBase, recargo, descuentoPorcentaje) { let precio = precioBase + recargo; precio = precio - (precio * descuentoPorcentaje / 100); return precio; }',
+    'duende-trastocado':
+      'function intercambiarAtributos(fuerza, agilidad) { const temp = fuerza; fuerza = agilidad; agilidad = temp; return [fuerza, agilidad]; }',
+    'trol-tasador':
+      'function encontrarMayorTesoro(tesoros) { let mayor = tesoros[0]; for (const t of tesoros) if (t > mayor) mayor = t; return mayor; }',
+    'golem-contable':
+      'function contarObjetosValiosos(objetos, umbral) { let total = 0; for (const o of objetos) if (o > umbral) total++; return total; }',
+    'espejo-distorsionado':
+      'function invertirPergamino(letras) { return [...letras].reverse(); }',
+    'aprendiz-distraido':
+      'function invocarHechizo(nombre, poder = 10) { if (!nombre) return "Hechizo fallido: falta el nombre"; return `${nombre} inflige ${poder} de daño`; }',
+    'espiritu-combinador':
+      'function aplicarHabilidad(base, habilidad) { return habilidad(base); }',
   };
 
   it.each(challenges)('reto "$id" pasa todos sus casos con la solución correcta', (challenge) => {

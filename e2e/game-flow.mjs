@@ -53,12 +53,24 @@ try {
   await page.click('.title-screen .btn-primary');
   await page.waitForSelector('.world-screen');
 
-  // World -> Challenge (primera zona: Bosque de la Lógica, un solo enemigo)
-  await page.click('.zone-card');
+  // World -> Challenge: entra a "Bosque de la Lógica" (un solo enemigo, el
+  // Golem) por nombre, no por posición — el orden de zonas puede cambiar
+  // según crezca el contenido.
+  const zoneCards = await page.$$('.zone-card');
+  let enteredLogica = false;
+  for (const card of zoneCards) {
+    const name = await card.$eval('.zone-name', (el) => el.textContent);
+    if (name.includes('Bosque de la Lógica')) {
+      await card.click();
+      enteredLogica = true;
+      break;
+    }
+  }
+  assert(enteredLogica, 'la zona "Bosque de la Lógica" existe en el mapa');
   await page.waitForSelector('.challenge-screen');
 
   const enemyName = await page.textContent('.enemy-name');
-  assert(enemyName.includes('Golem'), `el primer enemigo es el Golem de Piedra (fue "${enemyName}")`);
+  assert(enemyName.includes('Golem'), `el enemigo de "Bosque de la Lógica" es el Golem de Piedra (fue "${enemyName}")`);
 
   // Escribe la solución real en el editor CodeMirror.
   await page.click('.cm-content');

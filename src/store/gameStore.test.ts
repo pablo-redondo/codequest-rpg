@@ -6,6 +6,7 @@ import type { ChallengeResult } from '../types/challenge';
 const logicaZone = zones.find((z) => z.id === 'logica')!; // 1 reto (conditionals)
 const buclesZone = zones.find((z) => z.id === 'bucles')!; // 2 retos (loops)
 const recursionZone = zones.find((z) => z.id === 'recursion')!; // 1 reto (recursion)
+const mercadoZone = zones.find((z) => z.id === 'mercado')!; // 3 retos (arrays)
 
 const emptyMastery = {
   variables: 0,
@@ -167,12 +168,18 @@ describe('applyChallengeResult', () => {
       expect(recursionZone.challenges).toHaveLength(1); // confirma que se repitió el mismo reto
     });
 
-    it('never unlocks Mano del Recolector while no "arrays" challenges exist in the content', () => {
-      // Repite todo el contenido disponible varias veces: ninguna zona es de concepto "arrays".
-      for (let i = 0; i < 5; i++) grindLogicaOnce();
+    it('unlocks Mano del Recolector after beating two array challenges (arrays, threshold 2)', () => {
+      expect(mercadoZone.challenges.length).toBeGreaterThanOrEqual(2);
+      useGameStore.getState().startZone('mercado');
 
-      expect(useGameStore.getState().skills.masteryByConcept.arrays).toBe(0);
+      useGameStore.getState().applyChallengeResult(passResult());
       expect(useGameStore.getState().skills.unlockedSpells).not.toContain('mano-recolector');
+
+      useGameStore.getState().nextChallenge(); // avanza al segundo reto de arrays de la zona
+      useGameStore.getState().applyChallengeResult(passResult());
+
+      expect(useGameStore.getState().skills.masteryByConcept.arrays).toBe(2);
+      expect(useGameStore.getState().skills.unlockedSpells).toContain('mano-recolector');
     });
 
     it('does not re-add an already-unlocked spell to unlockedSpells', () => {
