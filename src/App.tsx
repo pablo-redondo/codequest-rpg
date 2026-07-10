@@ -3,6 +3,8 @@ import { useGameStore } from './store/gameStore';
 import { TitleScreen } from './components/TitleScreen';
 import { WorldMap } from './components/WorldMap';
 import { ResultsScreen } from './components/ResultsScreen';
+import { CrtOverlay } from './components/CrtOverlay';
+import type { Screen } from './types/zone';
 import './styles/game.css';
 
 // CodeMirror (el editor real del ChallengeScreen) pesa la mayor parte del
@@ -17,6 +19,15 @@ const ChallengeScreen = lazy(() =>
 function App() {
   const screen = useGameStore((state) => state.screen);
 
+  return (
+    <>
+      {renderScreen(screen)}
+      <CrtOverlay />
+    </>
+  );
+}
+
+function renderScreen(screen: Screen) {
   if (screen === 'title') return <TitleScreen />;
   if (screen === 'world') return <WorldMap />;
   if (screen === 'challenge') {

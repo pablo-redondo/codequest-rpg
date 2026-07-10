@@ -895,6 +895,11 @@ body {
 .code-editor {
   background: #0d1117;
   overflow: hidden;
+  /* Encima del overlay CRT (z-index 50): el fondo opaco + posición propia
+     evitan que las scanlines se vean sobre el código, tal como acuerda el
+     documento de diseño. */
+  position: relative;
+  z-index: 60;
 }
 
 .code-editor .cm-editor {
@@ -1062,6 +1067,30 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* CRT overlay (Paso 5): scanlines + viñeta sutiles, superpuestas a todo el
+   juego excepto el editor de código (que va por encima, z-index 60). */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.04) 0px,
+      rgba(0, 0, 0, 0.04) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-overlay {
+    display: none;
+  }
 }
 
 /* Responsive */
