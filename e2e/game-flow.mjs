@@ -3,12 +3,22 @@
 // verdad, escribiendo código en el editor CodeMirror) -> results -> world,
 // y verifica que el progreso del jugador persiste en localStorage y
 // sobrevive a un refresh.
+import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const PORT = 41732;
 const BASE = `http://localhost:${PORT}`;
-const CHROMIUM = '/opt/pw-browsers/chromium';
+// En CI (y en cualquier máquina donde se haya corrido
+// `playwright install chromium`) Playwright resuelve su propio binario sin
+// ayuda. Algunos sandboxes de desarrollo, en cambio, traen Chromium
+// preinstalado en una ruta fija fuera del registro habitual de Playwright;
+// si existe, se usa explícitamente. PLAYWRIGHT_CHROMIUM_PATH permite forzar
+// cualquier otra ruta.
+const SANDBOX_CHROMIUM_PATH = '/opt/pw-browsers/chromium';
+const CHROMIUM_PATH =
+  process.env.PLAYWRIGHT_CHROMIUM_PATH ??
+  (existsSync(SANDBOX_CHROMIUM_PATH) ? SANDBOX_CHROMIUM_PATH : undefined);
 
 // Solución de referencia del reto "golem-de-piedra" (el mismo que valida
 // src/lib/sandbox.test.ts). Vive aquí para el e2e, no en el código del juego.
@@ -40,7 +50,7 @@ const server = spawn('node_modules/.bin/vite', ['preview', '--port', String(PORT
 let browser;
 try {
   await waitForServer(BASE);
-  browser = await chromium.launch({ executablePath: CHROMIUM });
+  browser = await chromium.launch(CHROMIUM_PATH ? { executablePath: CHROMIUM_PATH } : {});
   const page = await browser.newPage();
 
   const pageErrors = [];
@@ -78,11 +88,11 @@ try {
   await page.keyboard.press('Backspace');
   await page.keyboard.type(GOLEM_SOLUTION, { delay: 5 });
 
-  // Ataca: ejecuta el código en el Web Worker y espera el resultado.
+  // Ataca: ejecuta el código en el Web Worker y espera el resultado. El
+  // feedback pasa primero por el estado "running" (mismo .feedback-box) antes
+  // de asentarse en "pass", así que esperamos la clase final explícitamente.
   await page.click('.action-button');
-  await page.waitForSelector('.feedback-box', { timeout: 5000 });
-  const feedbackClass = await page.getAttribute('.feedback-box', 'class');
-  assert(feedbackClass.includes('feedback-correct'), `el reto se resuelve (pass), no "${feedbackClass}"`);
+  await page.waitForSelector('.feedback-box.feedback-correct', { timeout: 5000 });
 
   // Único reto de la zona -> el botón de feedback lleva a resultados.
   await page.click('.feedback-box .btn-primary');
