@@ -46,6 +46,10 @@ export function ResultsScreen() {
         </div>
       )}
 
+      {session.zoneFlawless && (
+        <div className="flawless-badge">⚡ ¡Zona Impecable! Sin fallos ⚡</div>
+      )}
+
       {accuracy === 100 && (
         <div className="perfect-badge">⭐ ¡Puntuación Perfecta! ⭐</div>
       )}

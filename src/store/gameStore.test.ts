@@ -1,10 +1,20 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useGameStore } from './gameStore';
+import { FLAWLESS_BONUS_XP, useGameStore } from './gameStore';
 import { zones } from '../data/zones';
 import type { ChallengeResult } from '../types/challenge';
 
-const logicaZone = zones.find((z) => z.id === 'logica')!; // 1 reto
-const buclesZone = zones.find((z) => z.id === 'bucles')!; // 2 retos
+const logicaZone = zones.find((z) => z.id === 'logica')!; // 1 reto (conditionals)
+const buclesZone = zones.find((z) => z.id === 'bucles')!; // 2 retos (loops)
+const recursionZone = zones.find((z) => z.id === 'recursion')!; // 1 reto (recursion)
+
+const emptyMastery = {
+  variables: 0,
+  conditionals: 0,
+  loops: 0,
+  arrays: 0,
+  functions: 0,
+  recursion: 0,
+};
 
 function resetStore() {
   localStorage.clear();
@@ -12,7 +22,8 @@ function resetStore() {
     screen: 'title',
     player: { level: 1, xp: 0, gold: 0, inventory: [] },
     challenge: { currentZoneId: null, challengeIndex: 0 },
-    session: { sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0 },
+    session: { sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0, zoneFlawless: true },
+    skills: { masteryByConcept: { ...emptyMastery }, unlockedSpells: [] },
   });
 }
 
@@ -26,6 +37,12 @@ function failResult(): ChallengeResult {
   return { outcome: 'fail', cases: [], durationMs: 1 };
 }
 
+/** Vence el reto actual de la zona 'logica' (1 solo reto, conditionals) y vuelve a empezarla. */
+function grindLogicaOnce() {
+  useGameStore.getState().startZone('logica');
+  useGameStore.getState().applyChallengeResult(passResult());
+}
+
 describe('startZone', () => {
   it('moves to the challenge screen and resets the challenge/session state', () => {
     useGameStore.getState().startZone('bucles');
@@ -33,25 +50,31 @@ describe('startZone', () => {
 
     expect(state.screen).toBe('challenge');
     expect(state.challenge).toEqual({ currentZoneId: 'bucles', challengeIndex: 0 });
-    expect(state.session).toEqual({ sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0 });
+    expect(state.session).toEqual({
+      sessionCorrect: 0,
+      sessionXP: 0,
+      challengeAttempts: 0,
+      zoneFlawless: true,
+    });
   });
 });
 
 describe('applyChallengeResult', () => {
-  it('awards the reward xp/gold of the current challenge on pass', () => {
+  it('awards the reward xp/gold of the current challenge on pass (flawless: +bonus)', () => {
     useGameStore.getState().startZone('logica');
     const reward = logicaZone.challenges[0];
+    const expectedXp = reward.rewardXp + FLAWLESS_BONUS_XP; // primer intento => flawless
 
     useGameStore.getState().applyChallengeResult(passResult());
     const state = useGameStore.getState();
 
-    expect(state.player.xp).toBe(reward.rewardXp);
+    expect(state.player.xp).toBe(expectedXp);
     expect(state.player.gold).toBe(reward.rewardGold);
     expect(state.session.sessionCorrect).toBe(1);
-    expect(state.session.sessionXP).toBe(reward.rewardXp);
+    expect(state.session.sessionXP).toBe(expectedXp);
   });
 
-  it('does not award xp/gold and increments challengeAttempts on fail/error/timeout', () => {
+  it('does not award xp/gold, increments challengeAttempts and clears zoneFlawless on fail/error/timeout', () => {
     useGameStore.getState().startZone('logica');
 
     useGameStore.getState().applyChallengeResult(failResult());
@@ -63,17 +86,104 @@ describe('applyChallengeResult', () => {
     expect(state.player.gold).toBe(0);
     expect(state.session.sessionCorrect).toBe(0);
     expect(state.session.challengeAttempts).toBe(3);
+    expect(state.session.zoneFlawless).toBe(false);
+  });
+
+  it('returns null and applies nothing when there is no active challenge', () => {
+    const outcome = useGameStore.getState().applyChallengeResult(passResult());
+
+    expect(outcome).toBeNull();
+    expect(useGameStore.getState().player.xp).toBe(0);
   });
 
   it('levels up and carries over the xp overflow once the threshold is reached', () => {
     useGameStore.setState({ player: { level: 1, xp: 90, gold: 0, inventory: [] } });
-    useGameStore.getState().startZone('logica'); // rewardXp 40 -> 90+40=130 >= 100
+    // flawless: rewardXp 40 + bonus 20 = 60 -> 90+60=150 >= 100
+    useGameStore.getState().startZone('logica');
 
     useGameStore.getState().applyChallengeResult(passResult());
     const state = useGameStore.getState();
 
     expect(state.player.level).toBe(2);
-    expect(state.player.xp).toBe(30);
+    expect(state.player.xp).toBe(50);
+  });
+
+  describe('flawless bonus', () => {
+    it('returns flawless=true and adds FLAWLESS_BONUS_XP when there were no prior failed attempts', () => {
+      useGameStore.getState().startZone('logica');
+      const reward = logicaZone.challenges[0];
+
+      const outcome = useGameStore.getState().applyChallengeResult(passResult());
+      const state = useGameStore.getState();
+
+      expect(outcome).toEqual({ flawless: true, xpGained: reward.rewardXp + FLAWLESS_BONUS_XP });
+      expect(state.player.xp).toBe(reward.rewardXp + FLAWLESS_BONUS_XP);
+      expect(state.session.sessionXP).toBe(reward.rewardXp + FLAWLESS_BONUS_XP);
+    });
+
+    it('returns flawless=false and awards no bonus after a prior failed attempt on the same challenge', () => {
+      useGameStore.getState().startZone('logica');
+      const reward = logicaZone.challenges[0];
+
+      useGameStore.getState().applyChallengeResult(failResult());
+      const outcome = useGameStore.getState().applyChallengeResult(passResult());
+
+      expect(outcome).toEqual({ flawless: false, xpGained: reward.rewardXp });
+      expect(useGameStore.getState().player.xp).toBe(reward.rewardXp);
+    });
+  });
+
+  describe('mastery and spell unlocks', () => {
+    it('increments masteryByConcept for the concept of the completed challenge', () => {
+      useGameStore.getState().startZone('bucles'); // loops
+      useGameStore.getState().applyChallengeResult(passResult());
+
+      expect(useGameStore.getState().skills.masteryByConcept.loops).toBe(1);
+      expect(useGameStore.getState().skills.masteryByConcept.conditionals).toBe(0);
+    });
+
+    it('unlocks Visión Lógica exactly when conditionals mastery reaches its threshold (3)', () => {
+      grindLogicaOnce();
+      grindLogicaOnce();
+      expect(useGameStore.getState().skills.unlockedSpells).not.toContain('vision-logica');
+
+      grindLogicaOnce();
+      const state = useGameStore.getState();
+
+      expect(state.skills.masteryByConcept.conditionals).toBe(3);
+      expect(state.skills.unlockedSpells).toContain('vision-logica');
+    });
+
+    it('unlocks Eco Recursivo (recursion, threshold 2) after beating the dragon twice', () => {
+      useGameStore.getState().startZone('recursion');
+      useGameStore.getState().applyChallengeResult(passResult());
+      expect(useGameStore.getState().skills.unlockedSpells).not.toContain('eco-recursivo');
+
+      useGameStore.getState().startZone('recursion');
+      useGameStore.getState().applyChallengeResult(passResult());
+
+      expect(useGameStore.getState().skills.masteryByConcept.recursion).toBe(2);
+      expect(useGameStore.getState().skills.unlockedSpells).toContain('eco-recursivo');
+      expect(recursionZone.challenges).toHaveLength(1); // confirma que se repitió el mismo reto
+    });
+
+    it('never unlocks Mano del Recolector while no "arrays" challenges exist in the content', () => {
+      // Repite todo el contenido disponible varias veces: ninguna zona es de concepto "arrays".
+      for (let i = 0; i < 5; i++) grindLogicaOnce();
+
+      expect(useGameStore.getState().skills.masteryByConcept.arrays).toBe(0);
+      expect(useGameStore.getState().skills.unlockedSpells).not.toContain('mano-recolector');
+    });
+
+    it('does not re-add an already-unlocked spell to unlockedSpells', () => {
+      grindLogicaOnce();
+      grindLogicaOnce();
+      grindLogicaOnce();
+      grindLogicaOnce(); // una cuarta vez, ya desbloqueado
+
+      const unlocked = useGameStore.getState().skills.unlockedSpells;
+      expect(unlocked.filter((id) => id === 'vision-logica')).toHaveLength(1);
+    });
   });
 });
 

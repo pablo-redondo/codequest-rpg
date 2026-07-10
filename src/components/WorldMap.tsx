@@ -1,10 +1,13 @@
 import { zones } from '../data/zones';
 import { useGameStore } from '../store/gameStore';
+import { MasteryBars } from './MasteryBars';
+import { Grimoire } from './Grimoire';
 
 const XP_PER_LEVEL = 100;
 
 export function WorldMap() {
   const player = useGameStore((state) => state.player);
+  const skills = useGameStore((state) => state.skills);
   const startZone = useGameStore((state) => state.startZone);
   const xpProgress = (player.xp / (player.level * XP_PER_LEVEL)) * 100;
 
@@ -54,6 +57,9 @@ export function WorldMap() {
           </div>
         </div>
       )}
+
+      <MasteryBars masteryByConcept={skills.masteryByConcept} />
+      <Grimoire unlockedSpellIds={skills.unlockedSpells} masteryByConcept={skills.masteryByConcept} />
 
       <div className="zones-grid">
         {zones.map(zone => (

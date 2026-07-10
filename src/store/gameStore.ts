@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { zones } from '../data/zones';
+import { spells } from '../data/spells';
 import { getLootItem } from '../utils/loot';
 import type { Screen, Zone } from '../types/zone';
-import type { CodeChallenge, ChallengeResult } from '../types/challenge';
+import type { ChallengeResult, CodeChallenge, Concept } from '../types/challenge';
 
 const XP_PER_LEVEL = 100;
+export const FLAWLESS_BONUS_XP = 20;
 
 interface PlayerState {
   level: number;
@@ -25,10 +27,17 @@ interface ResultsSessionState {
   /**
    * Intentos que NO resultaron en "pass" (fail/error/timeout) sobre el reto
    * actual, acumulados desde que se empezó ese reto. Se resetea al pasar al
-   * siguiente reto o al empezar zona. Sirve de base para el bonus "flawless"
-   * de la Fase 3 (aún no se calcula ningún bonus con este contador).
+   * siguiente reto o al empezar zona. Si sigue en 0 cuando el reto se supera,
+   * ese pass es "flawless" y recibe FLAWLESS_BONUS_XP.
    */
   challengeAttempts: number;
+  /** true mientras ningún reto de esta corrida de zona haya fallado. */
+  zoneFlawless: boolean;
+}
+
+interface SkillsState {
+  masteryByConcept: Record<Concept, number>;
+  unlockedSpells: string[];
 }
 
 interface GameState {
@@ -36,17 +45,38 @@ interface GameState {
   player: PlayerState;
   challenge: ChallengeSessionState;
   session: ResultsSessionState;
+  skills: SkillsState;
   goToScreen: (screen: Screen) => void;
   startZone: (zoneId: string) => void;
-  /** Aplica de forma síncrona el resultado (ya resuelto) de ejecutar un reto. */
-  applyChallengeResult: (result: ChallengeResult) => void;
+  /**
+   * Aplica de forma síncrona el resultado (ya resuelto) de ejecutar un reto:
+   * recompensa, maestría, desbloqueo de hechizos y bonus flawless. Devuelve
+   * info del pass para que la UI la muestre, o null si no fue un pass.
+   */
+  applyChallengeResult: (result: ChallengeResult) => { flawless: boolean; xpGained: number } | null;
   nextChallenge: () => void;
   goToWorld: () => void;
 }
 
 const initialPlayer: PlayerState = { level: 1, xp: 0, gold: 0, inventory: [] };
 const initialChallenge: ChallengeSessionState = { currentZoneId: null, challengeIndex: 0 };
-const initialSession: ResultsSessionState = { sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0 };
+const initialSession: ResultsSessionState = {
+  sessionCorrect: 0,
+  sessionXP: 0,
+  challengeAttempts: 0,
+  zoneFlawless: true,
+};
+const initialSkills: SkillsState = {
+  masteryByConcept: {
+    variables: 0,
+    conditionals: 0,
+    loops: 0,
+    arrays: 0,
+    functions: 0,
+    recursion: 0,
+  },
+  unlockedSpells: [],
+};
 
 export const useGameStore = create<GameState>()(
   persist(
@@ -55,6 +85,7 @@ export const useGameStore = create<GameState>()(
       player: initialPlayer,
       challenge: initialChallenge,
       session: initialSession,
+      skills: initialSkills,
 
       goToScreen: (screen) => set({ screen }),
 
@@ -62,26 +93,45 @@ export const useGameStore = create<GameState>()(
         set({
           screen: 'challenge',
           challenge: { currentZoneId: zoneId, challengeIndex: 0 },
-          session: { sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0 },
+          session: { sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0, zoneFlawless: true },
         }),
 
       applyChallengeResult: (result) => {
-        const { challenge, player, session } = get();
+        const { challenge, player, session, skills } = get();
         const zone = zones.find((z) => z.id === challenge.currentZoneId);
         const currentChallenge = zone?.challenges[challenge.challengeIndex];
-        if (!zone || !currentChallenge) return;
+        if (!zone || !currentChallenge) return null;
 
         if (result.outcome !== 'pass') {
-          set({ session: { ...session, challengeAttempts: session.challengeAttempts + 1 } });
-          return;
+          set({
+            session: {
+              ...session,
+              challengeAttempts: session.challengeAttempts + 1,
+              zoneFlawless: false,
+            },
+          });
+          return null;
         }
 
-        let newXp = player.xp + currentChallenge.rewardXp;
+        const flawless = session.challengeAttempts === 0;
+        const xpGained = currentChallenge.rewardXp + (flawless ? FLAWLESS_BONUS_XP : 0);
+
+        let newXp = player.xp + xpGained;
         let newLevel = player.level;
         if (newXp >= player.level * XP_PER_LEVEL) {
           newXp -= player.level * XP_PER_LEVEL;
           newLevel += 1;
         }
+
+        const concept = currentChallenge.concept;
+        const newMastery = {
+          ...skills.masteryByConcept,
+          [concept]: skills.masteryByConcept[concept] + 1,
+        };
+        const newlyUnlocked = spells
+          .filter((spell) => !skills.unlockedSpells.includes(spell.id))
+          .filter((spell) => newMastery[spell.concept] >= spell.threshold)
+          .map((spell) => spell.id);
 
         set({
           player: {
@@ -93,9 +143,15 @@ export const useGameStore = create<GameState>()(
           session: {
             ...session,
             sessionCorrect: session.sessionCorrect + 1,
-            sessionXP: session.sessionXP + currentChallenge.rewardXp,
+            sessionXP: session.sessionXP + xpGained,
+          },
+          skills: {
+            masteryByConcept: newMastery,
+            unlockedSpells: [...skills.unlockedSpells, ...newlyUnlocked],
           },
         });
+
+        return { flawless, xpGained };
       },
 
       nextChallenge: () => {
@@ -128,7 +184,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: 'codequest-player-progress',
-      partialize: (state) => ({ player: state.player }),
+      partialize: (state) => ({ player: state.player, skills: state.skills }),
     }
   )
 );

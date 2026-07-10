@@ -7,6 +7,9 @@ interface FeedbackAreaProps {
   result: ChallengeResult | null;
   rewardXp: number;
   rewardGold: number;
+  /** XP realmente ganado en el pass (incluye el bonus flawless si aplica). */
+  xpGained: number;
+  flawless: boolean;
   isLastChallenge: boolean;
   onNext: () => void;
 }
@@ -16,6 +19,8 @@ export function FeedbackArea({
   result,
   rewardXp,
   rewardGold,
+  xpGained,
+  flawless,
   isLastChallenge,
   onNext,
 }: FeedbackAreaProps) {
@@ -34,7 +39,10 @@ export function FeedbackArea({
   if (status === 'pass') {
     return (
       <div className="feedback-box feedback-correct">
-        <div className="feedback-icon">✅ ¡Enemigo derrotado! +{rewardXp} XP +{rewardGold} Gold</div>
+        <div className="feedback-icon">✅ ¡Enemigo derrotado! +{xpGained || rewardXp} XP +{rewardGold} Gold</div>
+        {flawless && (
+          <p className="feedback-flawless">⚡ ¡Impecable! Sin fallos previos (+20 XP de bonus)</p>
+        )}
         <button className="btn-primary" onClick={onNext}>
           {isLastChallenge ? '🏆 Ver Resultados' : '➡️ Siguiente Enemigo'}
         </button>
