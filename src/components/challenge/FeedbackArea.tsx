@@ -5,7 +5,6 @@ export type ChallengeStatus = 'idle' | 'running' | 'pass' | 'fail' | 'error' | '
 interface FeedbackAreaProps {
   status: ChallengeStatus;
   result: ChallengeResult | null;
-  rewardXp: number;
   rewardGold: number;
   /** XP realmente ganado en el pass (incluye el bonus flawless si aplica). */
   xpGained: number;
@@ -17,7 +16,6 @@ interface FeedbackAreaProps {
 export function FeedbackArea({
   status,
   result,
-  rewardXp,
   rewardGold,
   xpGained,
   flawless,
@@ -39,7 +37,7 @@ export function FeedbackArea({
   if (status === 'pass') {
     return (
       <div className="feedback-box feedback-correct">
-        <div className="feedback-icon">✅ ¡Enemigo derrotado! +{xpGained || rewardXp} XP +{rewardGold} Gold</div>
+        <div className="feedback-icon">✅ ¡Enemigo derrotado! +{xpGained} XP +{rewardGold} Gold</div>
         {flawless && (
           <p className="feedback-flawless">⚡ ¡Impecable! Sin fallos previos (+20 XP de bonus)</p>
         )}

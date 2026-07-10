@@ -73,12 +73,15 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
   async function handleCastSpell(spell: Spell) {
     switch (spell.effect) {
       case 'reveal-first-failure': {
+        // Marca el hechizo como usado ANTES del await: si no, un doble-clic
+        // rápido puede disparar dos dry-runs concurrentes (el botón no se
+        // deshabilita hasta que la promesa resuelve).
+        markUsed(spell.id);
         // Ejecución de diagnóstico: corre el código en el worker pero NUNCA
         // llama a applyChallengeResult, así no cuenta como intento.
         setDiagnosing(true);
         const dryRun = await runChallenge(code, challenge, { timeoutMs: effectiveTimeoutMs });
         setDiagnosing(false);
-        markUsed(spell.id);
 
         const firstFailureIndex = dryRun.cases.findIndex((c) => !c.passed);
         if (firstFailureIndex === -1) {
@@ -159,7 +162,6 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
       <FeedbackArea
         status={status}
         result={result}
-        rewardXp={challenge.rewardXp}
         rewardGold={challenge.rewardGold}
         xpGained={passInfo?.xpGained ?? challenge.rewardXp}
         flawless={passInfo?.flawless ?? false}

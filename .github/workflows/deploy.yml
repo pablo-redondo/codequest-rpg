@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     # Se salta silenciosamente en forks o mientras el secret no exista, en vez
     # de fallar en rojo por un secret que el proyecto aún no tiene configurado.
-    if: ${{ github.ref == 'refs/heads/main' && github.repository_owner != '' && secrets.VERCEL_TOKEN != '' }}
+    if: ${{ github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != '' }}
     environment:
       name: production
       url: ${{ steps.deploy.outputs.url }}
