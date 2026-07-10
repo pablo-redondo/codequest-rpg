@@ -6,9 +6,10 @@ interface EnemyHeaderProps {
   challenge: CodeChallenge;
   challengeIndex: number;
   casesPassed: number;
+  defeated: boolean;
 }
 
-export function EnemyHeader({ zone, challenge, challengeIndex, casesPassed }: EnemyHeaderProps) {
+export function EnemyHeader({ zone, challenge, challengeIndex, casesPassed, defeated }: EnemyHeaderProps) {
   const totalCases = challenge.testCases.length;
 
   return (
@@ -22,7 +23,7 @@ export function EnemyHeader({ zone, challenge, challengeIndex, casesPassed }: En
         </span>
       </div>
 
-      <div className="enemy-card">
+      <div className={defeated ? 'enemy-card enemy-card-defeated' : 'enemy-card'}>
         <div className="enemy-icon">{challenge.enemy.icon}</div>
         <div className="enemy-info">
           <div className="enemy-name">{challenge.enemy.name}</div>

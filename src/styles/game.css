@@ -114,12 +114,18 @@ body {
 
 /* Screens */
 .screen {
-  animation: fadeIn 0.35s ease;
+  animation: screenReveal 0.24s steps(4) both;
 }
 
-@keyframes fadeIn {
+@keyframes screenReveal {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation: none;
+  }
 }
 
 /* Title Screen */
@@ -245,16 +251,22 @@ body {
   font-family: var(--font-pixel);
   background: var(--bg-raised);
   border: 2px solid var(--teal-dark);
+  box-shadow: var(--pixel-shadow);
   padding: 0.5rem 0.8rem;
   color: var(--text-primary);
   font-size: 0.65rem;
   line-height: 1.5;
   cursor: pointer;
-  transition: transform 0.05s steps(1);
+  transition: transform 0.05s steps(1), box-shadow 0.05s steps(1);
 }
 
 .settings-btn:hover {
   transform: translate(-1px, -1px);
+}
+
+.settings-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--frame-lo);
 }
 
 .settings-btn[aria-pressed='true'] {
@@ -478,7 +490,7 @@ body {
   background: var(--bg-card);
   padding: 1.5rem 1rem;
   cursor: pointer;
-  transition: transform 0.05s steps(1), border-color 0.1s steps(2);
+  transition: transform 0.05s steps(1), border-color 0.1s steps(2), box-shadow 0.05s steps(1);
   text-align: center;
   color: var(--text-primary);
   display: flex;
@@ -489,6 +501,11 @@ body {
 .zone-card:hover {
   transform: translate(-2px, -2px);
   border-color: var(--zone-color, var(--teal));
+}
+
+.zone-card:active {
+  transform: translate(4px, 4px);
+  box-shadow: inset 0 0 0 2px var(--frame-hi), 0 0 0 0 var(--frame-lo);
 }
 
 .zone-icon {
@@ -588,11 +605,39 @@ body {
 .feedback-correct {
   background: color-mix(in srgb, var(--green) 12%, var(--bg-card));
   border-color: var(--green-dark);
+  animation: feedbackPop 0.18s steps(3) both, feedbackFlash 0.2s steps(2);
+}
+
+@keyframes feedbackPop {
+  from { transform: scale(0.85); }
+  to   { transform: scale(1); }
+}
+
+@keyframes feedbackFlash {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.6); }
 }
 
 .feedback-wrong {
   background: color-mix(in srgb, var(--coral) 12%, var(--bg-card));
   border-color: var(--coral-dark);
+  animation: feedbackShake 0.3s steps(5);
+}
+
+@keyframes feedbackShake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-6px); }
+  40%  { transform: translateX(6px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-correct,
+  .feedback-wrong {
+    animation: none;
+  }
 }
 
 .feedback-icon {
@@ -766,6 +811,21 @@ body {
   padding: 1rem 1.25rem;
 }
 
+.enemy-card-defeated {
+  animation: enemyDefeatBlink 0.5s steps(2) 3;
+}
+
+@keyframes enemyDefeatBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enemy-card-defeated {
+    animation: none;
+  }
+}
+
 .enemy-icon {
   font-size: 2.4rem;
   flex-shrink: 0;
@@ -919,16 +979,22 @@ body {
   font-family: var(--font-pixel);
   background: var(--bg-raised);
   border: 2px solid var(--purple);
+  box-shadow: var(--pixel-shadow);
   padding: 0.5rem 0.8rem;
   color: var(--text-primary);
   font-size: 0.65rem;
   line-height: 1.5;
   cursor: pointer;
-  transition: transform 0.05s steps(1), opacity 0.1s steps(2);
+  transition: transform 0.05s steps(1), opacity 0.1s steps(2), box-shadow 0.05s steps(1);
 }
 
 .spell-btn:hover:not(:disabled) {
   transform: translate(-1px, -1px);
+}
+
+.spell-btn:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--frame-lo);
 }
 
 .spell-btn:disabled {

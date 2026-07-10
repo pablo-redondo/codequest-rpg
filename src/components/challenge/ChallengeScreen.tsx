@@ -133,6 +133,7 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
         challenge={challenge}
         challengeIndex={challengeIndex}
         casesPassed={casesPassed}
+        defeated={status === 'pass'}
       />
 
       <PromptPanel challenge={challenge} />
