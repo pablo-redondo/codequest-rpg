@@ -1,4 +1,8 @@
-export function TitleScreen({ onStart }) {
+import { useGameStore } from '../store/gameStore';
+
+export function TitleScreen() {
+  const goToScreen = useGameStore((state) => state.goToScreen);
+
   return (
     <div className="screen title-screen">
       <div className="title-logo">⚔️</div>
@@ -15,7 +19,7 @@ export function TitleScreen({ onStart }) {
           </p>
         </div>
       </div>
-      <button className="btn-primary" onClick={onStart}>
+      <button className="btn-primary" onClick={() => goToScreen('world')}>
         ⚔️ Comenzar Aventura
       </button>
     </div>
