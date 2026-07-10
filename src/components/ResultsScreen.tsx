@@ -1,11 +1,19 @@
+import { useEffect } from 'react';
 import { useGameStore, useCurrentZone } from '../store/gameStore';
 import { getLootItem } from '../utils/loot';
+import { playClick, playVictory } from '../lib/sfx';
 
 export function ResultsScreen() {
   const currentZone = useCurrentZone();
   const session = useGameStore((state) => state.session);
   const gold = useGameStore((state) => state.player.gold);
   const goToWorld = useGameStore((state) => state.goToWorld);
+  const soundEnabled = useGameStore((state) => state.settings.soundEnabled);
+
+  useEffect(() => {
+    playVictory(soundEnabled);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- suena una sola vez al entrar a resultados, no en cada cambio de soundEnabled
+  }, []);
 
   const totalChallenges = currentZone ? currentZone.challenges.length : 0;
   const accuracy = totalChallenges > 0 ? Math.round((session.sessionCorrect / totalChallenges) * 100) : 0;
@@ -54,7 +62,13 @@ export function ResultsScreen() {
         <div className="perfect-badge">⭐ ¡Puntuación Perfecta! ⭐</div>
       )}
 
-      <button className="btn-primary" onClick={goToWorld}>
+      <button
+        className="btn-primary"
+        onClick={() => {
+          playClick(soundEnabled);
+          goToWorld();
+        }}
+      >
         🗺️ Volver al Mapa
       </button>
     </div>

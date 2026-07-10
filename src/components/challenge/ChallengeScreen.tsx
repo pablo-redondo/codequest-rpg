@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCurrentChallenge, useCurrentZone, useGameStore } from '../../store/gameStore';
 import { DEFAULT_TIMEOUT_MS, runChallenge } from '../../lib/codeRunner';
 import { spells } from '../../data/spells';
+import { playClick, playPass } from '../../lib/sfx';
 import { EnemyHeader } from './EnemyHeader';
 import { PromptPanel } from './PromptPanel';
 import { CodeEditor } from './CodeEditor';
@@ -34,6 +35,7 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
   const unlockedSpellIds = useGameStore((state) => state.skills.unlockedSpells);
   const applyChallengeResult = useGameStore((state) => state.applyChallengeResult);
   const nextChallenge = useGameStore((state) => state.nextChallenge);
+  const soundEnabled = useGameStore((state) => state.settings.soundEnabled);
 
   const [code, setCode] = useState(challenge.starterCode);
   const [status, setStatus] = useState<ChallengeStatus>('idle');
@@ -55,6 +57,7 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
   const effectiveTimeoutMs = extendedTimeout ? DEFAULT_TIMEOUT_MS * 1.5 : DEFAULT_TIMEOUT_MS;
 
   async function handleAttack() {
+    playClick(soundEnabled);
     setStatus('running');
     setResult(null);
     setPassInfo(null);
@@ -64,6 +67,10 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
     setResult(outcome);
     setStatus(outcome.outcome);
     setPassInfo(applyChallengeResult(outcome));
+    // Mismo momento que dispara el flash/pop visual del feedback de pass.
+    if (outcome.outcome === 'pass') {
+      playPass(soundEnabled);
+    }
   }
 
   function markUsed(spellId: string) {
@@ -71,6 +78,7 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
   }
 
   async function handleCastSpell(spell: Spell) {
+    playClick(soundEnabled);
     switch (spell.effect) {
       case 'reveal-first-failure': {
         // Marca el hechizo como usado ANTES del await: si no, un doble-clic
@@ -167,7 +175,10 @@ function ChallengeRunner({ zone, challenge }: ChallengeRunnerProps) {
         xpGained={passInfo?.xpGained ?? challenge.rewardXp}
         flawless={passInfo?.flawless ?? false}
         isLastChallenge={isLastChallenge}
-        onNext={nextChallenge}
+        onNext={() => {
+          playClick(soundEnabled);
+          nextChallenge();
+        }}
       />
     </div>
   );

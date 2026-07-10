@@ -1,7 +1,9 @@
 import { useGameStore } from '../store/gameStore';
+import { playClick } from '../lib/sfx';
 
 export function TitleScreen() {
   const goToScreen = useGameStore((state) => state.goToScreen);
+  const soundEnabled = useGameStore((state) => state.settings.soundEnabled);
 
   return (
     <div className="screen title-screen">
@@ -19,7 +21,13 @@ export function TitleScreen() {
           </p>
         </div>
       </div>
-      <button className="btn-primary" onClick={() => goToScreen('world')}>
+      <button
+        className="btn-primary"
+        onClick={() => {
+          playClick(soundEnabled);
+          goToScreen('world');
+        }}
+      >
         ⚔️ Comenzar Aventura
       </button>
     </div>

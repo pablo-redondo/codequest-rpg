@@ -71,6 +71,17 @@ try {
   await page.click('.title-screen .btn-primary');
   await page.waitForSelector('.world-screen');
 
+  // Activa y desactiva el toggle de sonido (Paso 4 del rediseño retro): el
+  // AudioContext real del navegador headless debe crearse/sonar sin romper
+  // el flujo, y el juego debe seguir jugable con el toggle en cualquier
+  // estado al entrar a una zona.
+  await page.waitForSelector('.settings-btn');
+  const soundToggle = page.locator('.settings-btn', { hasText: 'Sonido' });
+  await soundToggle.click();
+  assert((await soundToggle.getAttribute('aria-pressed')) === 'true', 'el toggle de sonido se activa');
+  await soundToggle.click();
+  assert((await soundToggle.getAttribute('aria-pressed')) === 'false', 'el toggle de sonido vuelve a desactivarse');
+
   // World -> Challenge: entra a "Bosque de la Lógica" (un solo enemigo, el
   // Golem) por nombre, no por posición — el orden de zonas puede cambiar
   // según crezca el contenido.
