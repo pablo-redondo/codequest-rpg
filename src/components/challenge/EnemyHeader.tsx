@@ -10,7 +10,6 @@ interface EnemyHeaderProps {
 
 export function EnemyHeader({ zone, challenge, challengeIndex, casesPassed }: EnemyHeaderProps) {
   const totalCases = challenge.testCases.length;
-  const hpPercent = Math.max(0, Math.round(100 - (casesPassed / totalCases) * 100));
 
   return (
     <div className="enemy-header">
@@ -27,8 +26,17 @@ export function EnemyHeader({ zone, challenge, challengeIndex, casesPassed }: En
         <div className="enemy-icon">{challenge.enemy.icon}</div>
         <div className="enemy-info">
           <div className="enemy-name">{challenge.enemy.name}</div>
-          <div className="enemy-hp-track">
-            <div className="enemy-hp-fill" style={{ width: `${hpPercent}%` }} />
+          {/* key={casesPassed}: remonta la fila de bloques en cada intento
+              nuevo, así el flash de "bloque vaciado" se reproduce siempre
+              desde el principio en vez de depender de comparar el estado
+              anterior caso por caso. */}
+          <div className="enemy-hp-track" key={casesPassed}>
+            {Array.from({ length: totalCases }, (_, i) => (
+              <div
+                key={i}
+                className={i < casesPassed ? 'enemy-hp-segment enemy-hp-segment-empty' : 'enemy-hp-segment enemy-hp-segment-filled'}
+              />
+            ))}
           </div>
           <div className="enemy-hp-label">
             {casesPassed} / {totalCases} casos superados

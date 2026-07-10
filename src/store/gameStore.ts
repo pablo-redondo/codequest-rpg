@@ -40,12 +40,18 @@ interface SkillsState {
   unlockedSpells: string[];
 }
 
+interface SettingsState {
+  soundEnabled: boolean;
+  crtEnabled: boolean;
+}
+
 interface GameState {
   screen: Screen;
   player: PlayerState;
   challenge: ChallengeSessionState;
   session: ResultsSessionState;
   skills: SkillsState;
+  settings: SettingsState;
   goToScreen: (screen: Screen) => void;
   startZone: (zoneId: string) => void;
   /**
@@ -56,6 +62,8 @@ interface GameState {
   applyChallengeResult: (result: ChallengeResult) => { flawless: boolean; xpGained: number } | null;
   nextChallenge: () => void;
   goToWorld: () => void;
+  toggleSound: () => void;
+  toggleCrt: () => void;
 }
 
 const initialPlayer: PlayerState = { level: 1, xp: 0, gold: 0, inventory: [] };
@@ -77,6 +85,8 @@ const initialSkills: SkillsState = {
   },
   unlockedSpells: [],
 };
+// El jugador activa sonido/CRT si quiere; no arrancan encendidos.
+const initialSettings: SettingsState = { soundEnabled: false, crtEnabled: false };
 
 export const useGameStore = create<GameState>()(
   persist(
@@ -86,6 +96,7 @@ export const useGameStore = create<GameState>()(
       challenge: initialChallenge,
       session: initialSession,
       skills: initialSkills,
+      settings: initialSettings,
 
       goToScreen: (screen) => set({ screen }),
 
@@ -181,10 +192,16 @@ export const useGameStore = create<GameState>()(
       },
 
       goToWorld: () => set({ screen: 'world' }),
+
+      toggleSound: () =>
+        set((state) => ({ settings: { ...state.settings, soundEnabled: !state.settings.soundEnabled } })),
+
+      toggleCrt: () =>
+        set((state) => ({ settings: { ...state.settings, crtEnabled: !state.settings.crtEnabled } })),
     }),
     {
       name: 'codequest-player-progress',
-      partialize: (state) => ({ player: state.player, skills: state.skills }),
+      partialize: (state) => ({ player: state.player, skills: state.skills, settings: state.settings }),
     }
   )
 );

@@ -2,6 +2,7 @@ import { zones } from '../data/zones';
 import { useGameStore } from '../store/gameStore';
 import { MasteryBars } from './MasteryBars';
 import { Grimoire } from './Grimoire';
+import { SettingsToggle } from './SettingsToggle';
 
 const XP_PER_LEVEL = 100;
 
@@ -14,6 +15,8 @@ export function WorldMap() {
   return (
     <div className="screen world-screen">
       <h2 className="world-title">🗺️ Mapa del Mundo</h2>
+
+      <SettingsToggle />
 
       <div className="stats-bar">
         <div className="stat">

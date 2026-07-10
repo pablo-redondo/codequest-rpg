@@ -233,6 +233,35 @@ body {
   color: var(--teal);
 }
 
+/* Settings Toggle (sonido / CRT) */
+.settings-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.settings-btn {
+  font-family: var(--font-pixel);
+  background: var(--bg-raised);
+  border: 2px solid var(--teal-dark);
+  padding: 0.5rem 0.8rem;
+  color: var(--text-primary);
+  font-size: 0.65rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: transform 0.05s steps(1);
+}
+
+.settings-btn:hover {
+  transform: translate(-1px, -1px);
+}
+
+.settings-btn[aria-pressed='true'] {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
 /* Stats Bar */
 .stats-bar {
   display: flex;
@@ -764,14 +793,36 @@ body {
 }
 
 .enemy-hp-track {
+  display: flex;
+  gap: 3px;
   height: 16px;
-  background: var(--bg-secondary);
-  overflow: hidden;
+  padding: 2px;
 }
 
-.enemy-hp-fill {
+.enemy-hp-segment {
+  flex: 1;
   height: 100%;
+}
+
+.enemy-hp-segment-filled {
   background: var(--coral);
+}
+
+.enemy-hp-segment-empty {
+  background: var(--bg-secondary);
+  animation: hpSegmentEmpty 0.16s steps(2) forwards;
+}
+
+@keyframes hpSegmentEmpty {
+  0%   { background: var(--coral); }
+  50%  { background: var(--frame-hi); }
+  100% { background: var(--bg-secondary); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enemy-hp-segment-empty {
+    animation: none;
+  }
 }
 
 .enemy-hp-label {

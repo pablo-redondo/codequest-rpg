@@ -38,6 +38,7 @@ function resetStore() {
     challenge: { currentZoneId: null, challengeIndex: 0 },
     session: { sessionCorrect: 0, sessionXP: 0, challengeAttempts: 0, zoneFlawless: true },
     skills: { masteryByConcept: { ...emptyMastery }, unlockedSpells: [] },
+    settings: { soundEnabled: false, crtEnabled: false },
   });
 }
 
@@ -278,5 +279,36 @@ describe('goToWorld', () => {
     useGameStore.getState().goToWorld();
 
     expect(useGameStore.getState().screen).toBe('world');
+  });
+});
+
+describe('settings', () => {
+  it('defaults to soundEnabled=false and crtEnabled=false', () => {
+    expect(useGameStore.getState().settings).toEqual({ soundEnabled: false, crtEnabled: false });
+  });
+
+  it('toggleSound flips soundEnabled without touching crtEnabled', () => {
+    useGameStore.getState().toggleSound();
+    expect(useGameStore.getState().settings).toEqual({ soundEnabled: true, crtEnabled: false });
+
+    useGameStore.getState().toggleSound();
+    expect(useGameStore.getState().settings.soundEnabled).toBe(false);
+  });
+
+  it('toggleCrt flips crtEnabled without touching soundEnabled', () => {
+    useGameStore.getState().toggleCrt();
+    expect(useGameStore.getState().settings).toEqual({ soundEnabled: false, crtEnabled: true });
+
+    useGameStore.getState().toggleCrt();
+    expect(useGameStore.getState().settings.crtEnabled).toBe(false);
+  });
+
+  it('persists the toggled settings to localStorage via the persist middleware', () => {
+    useGameStore.getState().toggleSound();
+    useGameStore.getState().toggleCrt();
+
+    const stored = JSON.parse(localStorage.getItem('codequest-player-progress')!);
+
+    expect(stored.state.settings).toEqual({ soundEnabled: true, crtEnabled: true });
   });
 });
