@@ -12,7 +12,12 @@ function challengesFor(...ids: string[]) {
 /**
  * Orden de progresión: variables -> condicionales -> bucles -> arrays ->
  * funciones -> recursión. Sigue la curva pedagógica clásica y coincide con
- * la dificultad creciente de los retos (1,1 -> 1 -> 2,2 -> 1,2,2 -> 2,3 -> 3).
+ * la dificultad creciente de los retos (1,1 -> 1,1,2 -> 1,2,2 -> 1,2,2 -> 2,3 -> 2,3).
+ *
+ * El número de retos por concepto no es arbitrario: cada hechizo de
+ * data/spells.ts exige un umbral de maestría en su concepto (threshold), y
+ * cada zona tiene al menos ese número de retos para que el hechizo sea
+ * alcanzable en una sola partida, sin repetir zona.
  */
 export const zones: Zone[] = [
   {
@@ -31,7 +36,7 @@ export const zones: Zone[] = [
     color: '#9c27b0',
     description: 'Enemigos que solo caen ante decisiones correctas',
     concept: 'conditionals',
-    challenges: challengesFor('golem-de-piedra'),
+    challenges: challengesFor('golem-de-piedra', 'espectro-del-azar', 'hechicero-elemental'),
   },
   {
     id: 'bucles',
@@ -40,7 +45,7 @@ export const zones: Zone[] = [
     color: '#ff9800',
     description: 'Hordas que solo se vencen repitiendo la acción correcta',
     concept: 'loops',
-    challenges: challengesFor('enjambre-de-slimes', 'guardianes-heridos'),
+    challenges: challengesFor('eco-del-bosque', 'enjambre-de-slimes', 'guardianes-heridos'),
   },
   {
     id: 'mercado',
@@ -67,6 +72,6 @@ export const zones: Zone[] = [
     color: '#f44336',
     description: 'El desafío final: vencerte a ti mismo, una y otra vez',
     concept: 'recursion',
-    challenges: challengesFor('dragon-fractal'),
+    challenges: challengesFor('espiritu-fractal', 'dragon-fractal'),
   },
 ];

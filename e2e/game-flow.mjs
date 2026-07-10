@@ -1,8 +1,8 @@
 // End-to-end del flujo jugable con Playwright.
-// Recorre title -> world -> challenge (resolviendo el reto del Golem de
-// verdad, escribiendo código en el editor CodeMirror) -> results -> world,
-// y verifica que el progreso del jugador persiste en localStorage y
-// sobrevive a un refresh.
+// Recorre title -> world -> challenge (resolviendo los retos reales de
+// "Bosque de la Lógica" uno a uno, escribiendo código en el editor
+// CodeMirror) -> results -> world, y verifica que el progreso del jugador
+// persiste en localStorage y sobrevive a un refresh.
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
@@ -20,10 +20,18 @@ const CHROMIUM_PATH =
   process.env.PLAYWRIGHT_CHROMIUM_PATH ??
   (existsSync(SANDBOX_CHROMIUM_PATH) ? SANDBOX_CHROMIUM_PATH : undefined);
 
-// Solución de referencia del reto "golem-de-piedra" (el mismo que valida
-// src/lib/sandbox.test.ts). Vive aquí para el e2e, no en el código del juego.
-const GOLEM_SOLUTION =
-  'function calcularDaño(ataque, defensa) { return Math.max(0, ataque - defensa); }';
+// Soluciones de referencia de los retos de "Bosque de la Lógica" (las mismas
+// que valida src/lib/sandbox.test.ts). Viven aquí para el e2e, no en el
+// código del juego. Se identifican por el nombre del enemigo, no por orden,
+// para no depender de cómo se ordenen los retos dentro de la zona.
+const LOGICA_SOLUTIONS = {
+  'Golem de Piedra':
+    'function calcularDaño(ataque, defensa) { return Math.max(0, ataque - defensa); }',
+  'Espectro del Azar':
+    'function calcularGolpe(probabilidad) { return probabilidad >= 90 ? "CRÍTICO" : "normal"; }',
+  'Hechicero Elemental':
+    'function hallarDebilidad(elemento) { switch (elemento) { case "fuego": return "agua"; case "agua": return "tierra"; case "tierra": return "aire"; case "aire": return "fuego"; default: return "desconocido"; } }',
+};
 
 function assert(condition, message) {
   if (!condition) throw new Error(`Aserción fallida: ${message}`);
@@ -79,23 +87,31 @@ try {
   assert(enteredLogica, 'la zona "Bosque de la Lógica" existe en el mapa');
   await page.waitForSelector('.challenge-screen');
 
-  const enemyName = await page.textContent('.enemy-name');
-  assert(enemyName.includes('Golem'), `el enemigo de "Bosque de la Lógica" es el Golem de Piedra (fue "${enemyName}")`);
+  // Resuelve, uno a uno, todos los retos de la zona hasta llegar a resultados.
+  const solvedEnemies = [];
+  const logicaChallengeCount = Object.keys(LOGICA_SOLUTIONS).length;
+  for (let i = 0; i < logicaChallengeCount; i++) {
+    await page.waitForSelector('.challenge-screen');
+    const enemyName = await page.textContent('.enemy-name');
+    const solution = LOGICA_SOLUTIONS[enemyName.trim()];
+    assert(solution, `hay solución de referencia para el enemigo "${enemyName}"`);
+    solvedEnemies.push(enemyName.trim());
 
-  // Escribe la solución real en el editor CodeMirror.
-  await page.click('.cm-content');
-  await page.keyboard.press('Control+a');
-  await page.keyboard.press('Backspace');
-  await page.keyboard.type(GOLEM_SOLUTION, { delay: 5 });
+    // Escribe la solución real en el editor CodeMirror.
+    await page.click('.cm-content');
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type(solution, { delay: 5 });
 
-  // Ataca: ejecuta el código en el Web Worker y espera el resultado. El
-  // feedback pasa primero por el estado "running" (mismo .feedback-box) antes
-  // de asentarse en "pass", así que esperamos la clase final explícitamente.
-  await page.click('.action-button');
-  await page.waitForSelector('.feedback-box.feedback-correct', { timeout: 5000 });
+    // Ataca: ejecuta el código en el Web Worker y espera el resultado. El
+    // feedback pasa primero por el estado "running" (mismo .feedback-box)
+    // antes de asentarse en "pass", así que esperamos la clase final.
+    await page.click('.action-button');
+    await page.waitForSelector('.feedback-box.feedback-correct', { timeout: 5000 });
+    await page.click('.feedback-box .btn-primary');
+  }
 
-  // Único reto de la zona -> el botón de feedback lleva a resultados.
-  await page.click('.feedback-box .btn-primary');
+  assert(solvedEnemies.includes('Golem de Piedra'), 'el Golem de Piedra se resolvió como parte de la zona');
   await page.waitForSelector('.results-screen');
 
   // Results -> World

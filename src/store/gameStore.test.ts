@@ -3,10 +3,23 @@ import { FLAWLESS_BONUS_XP, useGameStore } from './gameStore';
 import { zones } from '../data/zones';
 import type { ChallengeResult } from '../types/challenge';
 
-const logicaZone = zones.find((z) => z.id === 'logica')!; // 1 reto (conditionals)
-const buclesZone = zones.find((z) => z.id === 'bucles')!; // 2 retos (loops)
-const recursionZone = zones.find((z) => z.id === 'recursion')!; // 1 reto (recursion)
+const logicaZone = zones.find((z) => z.id === 'logica')!; // 3 retos (conditionals)
+const buclesZone = zones.find((z) => z.id === 'bucles')!; // 3 retos (loops)
+const recursionZone = zones.find((z) => z.id === 'recursion')!; // 2 retos (recursion)
 const mercadoZone = zones.find((z) => z.id === 'mercado')!; // 3 retos (arrays)
+
+/** Vence, en orden, todos los retos de una zona sin repetir ninguno. */
+function clearZone(zoneId: string) {
+  useGameStore.getState().startZone(zoneId);
+  const zone = zones.find((z) => z.id === zoneId)!;
+  zone.challenges.forEach((_, index) => {
+    useGameStore.getState().applyChallengeResult(passResult());
+    useGameStore.getState().nextChallenge();
+    if (index < zone.challenges.length - 1) {
+      expect(useGameStore.getState().challenge.challengeIndex).toBe(index + 1);
+    }
+  });
+}
 
 const emptyMastery = {
   variables: 0,
@@ -38,7 +51,11 @@ function failResult(): ChallengeResult {
   return { outcome: 'fail', cases: [], durationMs: 1 };
 }
 
-/** Vence el reto actual de la zona 'logica' (1 solo reto, conditionals) y vuelve a empezarla. */
+/**
+ * Repite el PRIMER reto de 'logica' (golem-de-piedra) sin avanzar de reto:
+ * startZone siempre resetea challengeIndex a 0. Útil para probar idempotencia
+ * de desbloqueo, no para probar alcanzabilidad sin repetir zona (ver clearZone).
+ */
 function grindLogicaOnce() {
   useGameStore.getState().startZone('logica');
   useGameStore.getState().applyChallengeResult(passResult());
@@ -143,29 +160,45 @@ describe('applyChallengeResult', () => {
       expect(useGameStore.getState().skills.masteryByConcept.conditionals).toBe(0);
     });
 
-    it('unlocks Visión Lógica exactly when conditionals mastery reaches its threshold (3)', () => {
-      grindLogicaOnce();
-      grindLogicaOnce();
+    it('unlocks Visión Lógica (conditionals, threshold 3) after clearing Bosque de la Lógica once, no repeats', () => {
+      expect(logicaZone.challenges.length).toBeGreaterThanOrEqual(3);
+      useGameStore.getState().startZone('logica');
+
+      useGameStore.getState().applyChallengeResult(passResult());
       expect(useGameStore.getState().skills.unlockedSpells).not.toContain('vision-logica');
 
-      grindLogicaOnce();
+      useGameStore.getState().nextChallenge();
+      useGameStore.getState().applyChallengeResult(passResult());
+      expect(useGameStore.getState().skills.unlockedSpells).not.toContain('vision-logica');
+
+      useGameStore.getState().nextChallenge();
+      useGameStore.getState().applyChallengeResult(passResult());
       const state = useGameStore.getState();
 
       expect(state.skills.masteryByConcept.conditionals).toBe(3);
       expect(state.skills.unlockedSpells).toContain('vision-logica');
     });
 
-    it('unlocks Eco Recursivo (recursion, threshold 2) after beating the dragon twice', () => {
+    it('unlocks Eco Recursivo (recursion, threshold 2) after clearing Torre de la Recursión once, no repeats', () => {
+      expect(recursionZone.challenges.length).toBeGreaterThanOrEqual(2);
       useGameStore.getState().startZone('recursion');
+
       useGameStore.getState().applyChallengeResult(passResult());
       expect(useGameStore.getState().skills.unlockedSpells).not.toContain('eco-recursivo');
 
-      useGameStore.getState().startZone('recursion');
+      useGameStore.getState().nextChallenge();
       useGameStore.getState().applyChallengeResult(passResult());
 
       expect(useGameStore.getState().skills.masteryByConcept.recursion).toBe(2);
       expect(useGameStore.getState().skills.unlockedSpells).toContain('eco-recursivo');
-      expect(recursionZone.challenges).toHaveLength(1); // confirma que se repitió el mismo reto
+    });
+
+    it('unlocks Bucle Temporal (loops, threshold 3) after clearing Pantano de los Bucles once, no repeats', () => {
+      expect(buclesZone.challenges.length).toBeGreaterThanOrEqual(3);
+      clearZone('bucles');
+
+      expect(useGameStore.getState().skills.masteryByConcept.loops).toBe(3);
+      expect(useGameStore.getState().skills.unlockedSpells).toContain('bucle-temporal');
     });
 
     it('unlocks Mano del Recolector after beating two array challenges (arrays, threshold 2)', () => {
@@ -209,10 +242,7 @@ describe('nextChallenge', () => {
   });
 
   it('awards loot and moves to results after the last challenge of the zone', () => {
-    useGameStore.getState().startZone('logica'); // 1 solo reto
-
-    useGameStore.getState().applyChallengeResult(passResult());
-    useGameStore.getState().nextChallenge();
+    clearZone('logica');
     const state = useGameStore.getState();
 
     expect(state.screen).toBe('results');
@@ -234,11 +264,8 @@ describe('nextChallenge', () => {
   });
 
   it('does not duplicate loot if the same zone is completed twice', () => {
-    for (let run = 0; run < 2; run++) {
-      useGameStore.getState().startZone('logica');
-      useGameStore.getState().applyChallengeResult(passResult());
-      useGameStore.getState().nextChallenge();
-    }
+    clearZone('logica');
+    clearZone('logica');
 
     expect(useGameStore.getState().player.inventory).toEqual(['🧩 Bosque de la Lógica Scroll']);
   });

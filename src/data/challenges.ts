@@ -307,4 +307,115 @@ export const challenges: CodeChallenge[] = [
     rewardXp: 90,
     rewardGold: 40,
   },
+
+  // --- Refuerzos de contenido: más retos por concepto para que los 4 ---
+  // --- hechizos sean alcanzables sin repetir zona (mismo umbral que ya ---
+  // --- tenían: Visión Lógica 3, Bucle Temporal 3, Eco Recursivo 2). ---
+  {
+    id: 'espectro-del-azar',
+    concept: 'conditionals',
+    difficulty: 1,
+    enemy: { name: 'Espectro del Azar', icon: '🎲' },
+    prompt:
+      'Calcula si el golpe es crítico: si la probabilidad es 90 o más, devuelve "CRÍTICO"; ' +
+      'si no, devuelve "normal". Usa el operador ternario.',
+    conceptExplanation:
+      'Operador ternario: condición ? valorSiTrue : valorSiFalse. Ideal para condicionales de una sola línea.',
+    functionName: 'calcularGolpe',
+    starterCode: `function calcularGolpe(probabilidad) {
+  // usa el operador ternario: probabilidad >= 90 ? ... : ...
+  return /* completa aquí */;
+}`,
+    testCases: [
+      { args: [90], expected: 'CRÍTICO', description: 'justo en el umbral' },
+      { args: [89], expected: 'normal', description: 'justo por debajo' },
+      { args: [100], expected: 'CRÍTICO', description: 'muy por encima' },
+      { args: [0], expected: 'normal', description: 'comprobación', hidden: true },
+    ],
+    hints: ['probabilidad >= 90 ? "CRÍTICO" : "normal";', 'El ternario reemplaza un if/else de una sola rama.'],
+    rewardXp: 40,
+    rewardGold: 15,
+  },
+  {
+    id: 'hechicero-elemental',
+    concept: 'conditionals',
+    difficulty: 2,
+    enemy: { name: 'Hechicero Elemental', icon: '🔥' },
+    prompt:
+      'Cada elemento tiene una debilidad: fuego→agua, agua→tierra, tierra→aire, aire→fuego. ' +
+      'Dado un elemento, devuelve su debilidad. Si no lo reconoces, devuelve "desconocido".',
+    conceptExplanation:
+      'switch compara un valor contra múltiples case. Úsalo cuando tengas muchas ramas para el mismo valor.',
+    functionName: 'hallarDebilidad',
+    starterCode: `function hallarDebilidad(elemento) {
+  switch (elemento) {
+    case 'fuego': return 'agua';
+    // completa los casos que faltan: agua, tierra, aire
+    default: return 'desconocido';
+  }
+}`,
+    testCases: [
+      { args: ['fuego'], expected: 'agua', description: 'fuego es débil al agua' },
+      { args: ['aire'], expected: 'fuego', description: 'aire es débil al fuego' },
+      { args: ['hielo'], expected: 'desconocido', description: 'elemento no reconocido' },
+      { args: ['agua'], expected: 'tierra', description: 'comprobación', hidden: true },
+    ],
+    hints: [
+      'Cada case necesita su propio return (o break).',
+      "case 'agua': return 'tierra'; case 'tierra': return 'aire'; case 'aire': return 'fuego';",
+    ],
+    rewardXp: 60,
+    rewardGold: 25,
+  },
+  {
+    id: 'espiritu-fractal',
+    concept: 'recursion',
+    difficulty: 2,
+    enemy: { name: 'Espíritu Fractal', icon: '🌀' },
+    prompt:
+      'Antes de enfrentar al dragón, entrena con un espíritu menor: calcula la suma de todos los ' +
+      'números desde 1 hasta n, de forma recursiva.',
+    conceptExplanation:
+      'Recursión: define el caso base (n === 0 → 0) y el caso recursivo (n + sumarHastaN(n - 1)).',
+    functionName: 'sumarHastaN',
+    starterCode: `function sumarHastaN(n) {
+  // caso base: sumarHastaN(0) = 0
+  // caso recursivo: n + sumarHastaN(n - 1)
+}`,
+    testCases: [
+      { args: [0], expected: 0, description: 'caso base' },
+      { args: [1], expected: 1, description: 'caso base + 1' },
+      { args: [5], expected: 15, description: 'recursión completa' },
+      { args: [10], expected: 55, description: 'comprobación', hidden: true },
+    ],
+    hints: ['Sin caso base, la recursión no termina.', 'sumarHastaN(5) = 5 + sumarHastaN(4).'],
+    rewardXp: 60,
+    rewardGold: 25,
+  },
+  {
+    id: 'eco-del-bosque',
+    concept: 'loops',
+    difficulty: 1,
+    enemy: { name: 'Eco del Bosque', icon: '🍃' },
+    prompt: 'Recibes una palabra en minúsculas. Cuenta cuántas vocales (a, e, i, o, u) contiene.',
+    conceptExplanation: 'Bucles: recorre cada carácter de la palabra y comprueba si es una vocal.',
+    functionName: 'contarVocales',
+    starterCode: `function contarVocales(palabra) {
+  let vocales = 0;
+  // recorre cada letra de "palabra" y cuenta las vocales
+  return vocales;
+}`,
+    testCases: [
+      { args: ['hola'], expected: 2, description: 'palabra normal' },
+      { args: ['xyz'], expected: 0, description: 'sin vocales' },
+      { args: ['aeiou'], expected: 5, description: 'todo vocales' },
+      { args: ['programacion'], expected: 5, description: 'comprobación', hidden: true },
+    ],
+    hints: [
+      "'aeiou'.includes(letra) te dice si una letra es vocal.",
+      'Recorre con for...of palabra y compara cada carácter.',
+    ],
+    rewardXp: 40,
+    rewardGold: 15,
+  },
 ];

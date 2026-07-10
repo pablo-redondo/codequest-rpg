@@ -100,6 +100,14 @@ describe('each shipped challenge is solvable', () => {
       'function invocarHechizo(nombre, poder = 10) { if (!nombre) return "Hechizo fallido: falta el nombre"; return `${nombre} inflige ${poder} de daño`; }',
     'espiritu-combinador':
       'function aplicarHabilidad(base, habilidad) { return habilidad(base); }',
+    'espectro-del-azar':
+      'function calcularGolpe(probabilidad) { return probabilidad >= 90 ? "CRÍTICO" : "normal"; }',
+    'hechicero-elemental':
+      'function hallarDebilidad(elemento) { switch (elemento) { case "fuego": return "agua"; case "agua": return "tierra"; case "tierra": return "aire"; case "aire": return "fuego"; default: return "desconocido"; } }',
+    'espiritu-fractal':
+      'function sumarHastaN(n) { return n === 0 ? 0 : n + sumarHastaN(n - 1); }',
+    'eco-del-bosque':
+      'function contarVocales(palabra) { let v = 0; for (const letra of palabra) if ("aeiou".includes(letra)) v++; return v; }',
   };
 
   it.each(challenges)('reto "$id" pasa todos sus casos con la solución correcta', (challenge) => {
