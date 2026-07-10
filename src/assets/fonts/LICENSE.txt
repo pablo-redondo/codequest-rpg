@@ -1,0 +1,9 @@
+Press Start 2P — Copyright 2012 Cody "CodeMan38" Boisclair
+VT323 — Copyright 2011 Peter Hull
+
+Ambas fuentes están licenciadas bajo la SIL Open Font License, Version 1.1.
+Texto completo: https://openfontlicense.org
+
+Subset "latin" (U+0000-00FF) descargado desde Google Fonts
+(fonts.googleapis.com / fonts.gstatic.com) y self-hosteado en este
+repositorio para evitar una petición externa en tiempo de ejecución.

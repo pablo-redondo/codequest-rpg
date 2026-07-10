@@ -10,7 +10,7 @@ export function PromptPanel({ challenge }: PromptPanelProps) {
       <div className="npc-dialog">
         <span className="npc-avatar">📜</span>
         <div className="npc-bubble">
-          <strong>Misión</strong>
+          <strong>Mision</strong>
           <p>{challenge.prompt}</p>
         </div>
       </div>
